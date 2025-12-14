@@ -1,0 +1,40 @@
+from socket import *
+import ssl #Importing TLS module
+import os #Python was checking wrong directory so I was using this to check where it was looking
+
+print(os.getcwd())
+
+serverName = '10.0.0.87'
+#IP of my desktop which I'm using as a server
+serverPort = 12000
+
+#Create TCP Socket
+clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket.settimeout(10)
+
+#Creating tls context
+context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+context.load_verify_locations(
+    cafile=r"C:\Users\Jordan\OneDrive - Southern Alberta Institute of Technology\Desktop\Phase2\server.crt"
+)
+
+#Wrapping TCP with TLS
+tlsSocket = context.wrap_socket(clientSocket, server_hostname=serverName)
+
+try:
+    clientSocket.connect((serverName,serverPort))
+    sentence = input('Input lowercase sentence:')
+    clientSocket.send(sentence.encode())
+    modifiedSentence = clientSocket.recv(1024)
+    print ('From Server:', modifiedSentence.decode())
+except timeout:
+    print("Connection timed out")
+
+except ssl.SSLError as e:
+    print("TLS error:", e)
+
+finally:
+    tlsSocket.close()
+#Redundant after wrapping clientSocket with tlssocket
+#inally:
+#   clientSocket.close()
